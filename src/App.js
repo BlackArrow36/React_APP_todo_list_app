@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import Logo from './components/Logo';
+import TaskInfo from './components/TaskInfo';
 
 function App() {
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('tasks');
     return saved ? JSON.parse(saved) : [];
   });
+
   const [input, setInput] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [filter, setFilter] = useState('incomplete');
@@ -13,7 +16,7 @@ function App() {
     const savedMode = localStorage.getItem('darkMode');
     return savedMode ? savedMode === 'true' : true;
   });
-  
+  const [dateFormat, setDateFormat] = useState('eu');
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -25,11 +28,15 @@ function App() {
 
   const addTask = () => {
     if (input.trim()) {
-      setTasks([...tasks, { text: input, completed: false, dueDate }]);
+      setTasks([...tasks, {
+        text: input,
+        completed: false,
+        dueDate
+      }]);
       setInput('');
       setDueDate('');
     }
-  };
+  };  
 
   const toggleTask = (index) => {
     const newTasks = [...tasks];
@@ -42,22 +49,41 @@ function App() {
     setTasks(newTasks);
   };
 
-  const getTaskStyle = (dueDate) => {
-    if (!dueDate) return { backgroundColor: 'lightgray',color:'black' };
-  
+  const getTaskStyle = (dueDate,darkMode) => {
+    //no due date
+    if (!dueDate) return darkMode
+      ? { backgroundColor: 'darkgray', color: 'white' }
+      : { backgroundColor: 'gray', color: 'black' }
+    
     const today = new Date();
     const due = new Date(dueDate);
     const diffTime = due - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-    if (diffDays < 0) return { backgroundColor: 'yellow',color:'black' }; // Overdue
-    if (diffDays == 0) return { backgroundColor: 'red',color:'black' }; // Today
-    if (diffDays <= 3) return { backgroundColor: 'orange',color:'black' }; // Urgent
-    if (diffDays <= 7) return { backgroundColor: 'lavender',color:'black' }; // Upcoming
-  
-    return { backgroundColor: 'white',color:'black' }; // Normal
+    if (diffDays < 0) {
+      return darkMode
+        ? { backgroundColor: 'goldenrod', color: 'black' }
+        : { backgroundColor: 'yellow', color: 'black' };
+    }
+    if (diffDays === 0) {
+      return darkMode
+        ? { backgroundColor: 'darkred', color: 'white' }
+        : { backgroundColor: 'red', color: 'black' };
+    }
+    if (diffDays <= 3) {
+      return darkMode
+        ? { backgroundColor: 'SaddleBrown', color: 'white' }
+        : { backgroundColor: 'orange', color: 'black' };
+    }
+    if (diffDays <= 7) {
+      return darkMode
+        ? { backgroundColor: 'mediumpurple', color: 'white' }
+        : { backgroundColor: 'purple', color: 'black' };
+    }
+    //default
+    return darkMode
+      ? { backgroundColor: 'gray', color: 'white' }
+      : { backgroundColor: 'lightgray', color: 'black' };
   };
-  
 
   const filteredTasks = tasks.filter((task) => {
     if (filter === 'completed') return task.completed;
@@ -72,6 +98,10 @@ function App() {
         <button onClick={() => setDarkMode(!darkMode)}>
           Toggle {darkMode ? 'Light' : 'Dark'} Mode
         </button>
+        <select onChange={(e) => setDateFormat(e.target.value)} value={dateFormat}>
+          <option value="eu">European (DD/MM/YYYY)</option>
+          <option value="us">American (MM/DD/YYYY)</option>
+        </select>
       </div>
       <div className="input-section">
         <input
@@ -93,10 +123,11 @@ function App() {
       </div>
       <ul>
         {filteredTasks.map((task, i) => (
-          <li key={i} className={task.completed ? 'completed' : ''} style={getTaskStyle(task.dueDate)}>        
-            <span onClick={() => toggleTask(i)}>
-              {task.text} {task.dueDate && `(Due: ${task.dueDate})`}
-            </span>
+          <li key={i} className={task.completed ? 'completed' : ''} style={getTaskStyle(task.dueDate,darkMode)}>
+            <Logo/>
+            <div onClick={() => toggleTask(i)} style={{ flex: 1 }}>
+              <TaskInfo task={task} dateFormat={dateFormat} />
+            </div>
             <button onClick={() => deleteTask(i)}>X</button>
           </li>
         ))}
