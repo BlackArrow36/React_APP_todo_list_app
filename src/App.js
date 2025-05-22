@@ -29,6 +29,7 @@ function App() {
   const addTask = () => {
     if (input.trim()) {
       setTasks([...tasks, {
+        id: Date.now(),
         text: input,
         completed: false,
         dueDate
@@ -122,15 +123,18 @@ function App() {
         <button onClick={() => setFilter('incomplete')}>Incomplete</button>
       </div>
       <ul>
-        {filteredTasks.map((task, i) => (
-          <li key={i} className={task.completed ? 'completed' : ''} style={getTaskStyle(task.dueDate,darkMode)}>
-            <Logo/>
-            <div onClick={() => toggleTask(i)} style={{ flex: 1 }}>
-              <TaskInfo task={task} dateFormat={dateFormat} />
-            </div>
-            <button onClick={() => deleteTask(i)}>X</button>
-          </li>
-        ))}
+        {filteredTasks.map((task, i) => {
+          const taskIndex = tasks.indexOf(task);
+          return (
+            <li key={taskIndex} className={task.completed ? 'completed' : ''} style={getTaskStyle(task.dueDate, darkMode)}>
+              <Logo />
+              <div onClick={() => toggleTask(taskIndex)} style={{ flex: 1 }}>
+                <TaskInfo task={task} dateFormat={dateFormat} />
+              </div>
+              <button onClick={() => deleteTask(taskIndex)}>X</button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
